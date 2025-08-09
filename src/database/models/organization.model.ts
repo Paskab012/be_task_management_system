@@ -15,12 +15,27 @@ import {
 import { User } from './user.model';
 import { Board } from './board.model';
 
+interface OrganizationCreationAttributes {
+  id?: string;
+  name: string;
+  description?: string;
+  logo?: string;
+  website?: string;
+  phone?: string;
+  address?: string;
+  settings?: Record<string, unknown>;
+  isActive?: boolean;
+}
+
 @Table({
   tableName: 'organizations',
-  paranoid: true, // Enables soft deletes
+  paranoid: true,
   timestamps: true,
 })
-export class Organization extends Model {
+export class Organization extends Model<
+  Organization,
+  OrganizationCreationAttributes
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
@@ -54,7 +69,7 @@ export class Organization extends Model {
   @AllowNull(true)
   @Default({})
   @Column(DataType.JSONB)
-  declare settings: Record<string, any>;
+  declare settings: Record<string, unknown>;
 
   @AllowNull(false)
   @Default(true)
@@ -68,7 +83,7 @@ export class Organization extends Model {
   declare updatedAt: Date;
 
   @DeletedAt
-  declare deletedAt: Date;
+  declare deletedAt: Date | null;
 
   // Associations
   @HasMany(() => User)

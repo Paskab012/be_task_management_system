@@ -31,6 +31,20 @@ export enum NotificationPriority {
   URGENT = 'urgent',
 }
 
+interface NotificationCreationAttributes {
+  id?: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  priority?: NotificationPriority;
+  isRead?: boolean;
+  readAt?: Date;
+  entityId?: string;
+  entityType?: string;
+  metadata?: Record<string, unknown>;
+  userId: string;
+}
+
 @Table({
   tableName: 'notifications',
   timestamps: true,
@@ -41,7 +55,10 @@ export enum NotificationPriority {
     { fields: ['createdAt'] },
   ],
 })
-export class Notification extends Model {
+export class Notification extends Model<
+  Notification,
+  NotificationCreationAttributes
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)

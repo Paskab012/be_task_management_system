@@ -21,6 +21,26 @@ import { User } from './user.model';
 import { TaskComment } from './task-comment.model';
 import { TaskAttachment } from './task-attachment.model';
 
+interface TaskCreationAttributes {
+  id?: string;
+  title: string;
+  description?: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  dueDate?: Date;
+  startDate?: Date;
+  completedAt?: Date;
+  estimatedHours?: number;
+  actualHours?: number;
+  position?: number;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+  boardId: string;
+  assignedUserId?: string;
+  createdById: string;
+  parentTaskId?: string;
+}
+
 @Table({
   tableName: 'tasks',
   paranoid: true,
@@ -34,7 +54,7 @@ import { TaskAttachment } from './task-attachment.model';
     { fields: ['dueDate'] },
   ],
 })
-export class Task extends Model<Task> {
+export class Task extends Model<Task, TaskCreationAttributes> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
