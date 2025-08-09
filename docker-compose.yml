@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: builder
+      target: development
     ports:
       - "3000:3000"
     env_file:
@@ -13,14 +13,25 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3000
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: 68199919
+      DATABASE_NAME: task_management_development
+      DATABASE_SSL: false
     volumes:
       - ./src:/app/src
       - ./src/database:/app/src/database
+      - ./package.json:/app/package.json
+      - ./.env:/app/.env
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - app-network
+    restart: unless-stopped
 
   postgres:
     image: postgres:15-alpine
@@ -29,12 +40,17 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: task_management_dev
+      POSTGRES_PASSWORD: 68199919 
+      POSTGRES_DB: task_management_development
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine

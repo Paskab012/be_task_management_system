@@ -11,12 +11,14 @@ import {
   UpdatedAt,
   AllowNull,
   Index,
+  DeletedAt,
 } from 'sequelize-typescript';
 import { User } from './user.model';
 
 @Table({
   tableName: 'user_sessions',
   timestamps: true,
+  paranoid: true,
   indexes: [
     { fields: ['userId'] },
     { fields: ['refreshToken'] },
@@ -46,11 +48,11 @@ export class UserSession extends Model<UserSession> {
 
   @AllowNull(true)
   @Column(DataType.STRING(45))
-  declare ipAddress: string;
+  declare ipAddress: string | null;
 
   @AllowNull(true)
   @Column(DataType.TEXT)
-  declare userAgent: string;
+  declare userAgent: string | null;
 
   @AllowNull(true)
   @Column(DataType.DATE)
@@ -67,6 +69,9 @@ export class UserSession extends Model<UserSession> {
 
   @UpdatedAt
   declare updatedAt: Date;
+
+  @DeletedAt
+  declare deletedAt: Date;
 
   // Associations
   @BelongsTo(() => User)

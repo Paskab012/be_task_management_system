@@ -24,6 +24,7 @@ import { TaskComment } from './task-comment.model';
 import { AuditLog } from './audit-logs.model';
 import { UserSession } from './user-session.model';
 import { Notification } from './notification.model';
+import { UserCreationAttributes } from '@/modules/auth/interfaces';
 
 @Table({
   tableName: 'users',
@@ -36,7 +37,7 @@ import { Notification } from './notification.model';
     { fields: ['isActive'] },
   ],
 })
-export class User extends Model<User> {
+export class User extends Model<User, UserCreationAttributes> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
