@@ -1,8 +1,8 @@
 //Board visibility
 export enum BoardVisibility {
-  PUBLIC = 'public', // Guests can view (but not task details)
-  PRIVATE = 'private', // Only assigned users can view
-  ORGANIZATION = 'organization', // All organization members can view
+  PUBLIC = 'public',
+  PRIVATE = 'private',
+  ORGANIZATION = 'organization',
 }
 
 //Board status for management

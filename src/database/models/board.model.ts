@@ -20,6 +20,20 @@ import { Organization } from './organization.model';
 import { User } from './user.model';
 import { Task } from './task.model';
 
+interface BoardCreationAttributes {
+  id?: string;
+  name: string;
+  description?: string;
+  visibility?: BoardVisibility;
+  status?: BoardStatus;
+  color?: string;
+  icon?: string;
+  settings?: Record<string, any>;
+  position?: number;
+  organizationId?: string;
+  createdById: string;
+}
+
 @Table({
   tableName: 'boards',
   paranoid: true,
@@ -31,7 +45,7 @@ import { Task } from './task.model';
     { fields: ['createdById'] },
   ],
 })
-export class Board extends Model {
+export class Board extends Model<Board, BoardCreationAttributes> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
@@ -57,7 +71,7 @@ export class Board extends Model {
 
   @AllowNull(true)
   @Column(DataType.STRING)
-  color: string;
+  color: string | null;
 
   @AllowNull(true)
   @Column(DataType.STRING)

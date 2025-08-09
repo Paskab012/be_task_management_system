@@ -15,23 +15,43 @@ import { User } from './user.model';
 
 export enum AuditAction {
   CREATE = 'create',
+  READ = 'read',
   UPDATE = 'update',
   DELETE = 'delete',
   LOGIN = 'login',
   LOGOUT = 'logout',
-  VIEW = 'view',
   ASSIGN = 'assign',
   UNASSIGN = 'unassign',
+  UPLOAD = 'upload',
+  DOWNLOAD = 'download',
+  SHARE = 'share',
+  ARCHIVE = 'archive',
+  RESTORE = 'restore',
 }
 
-export enum AuditEntity {
+export enum AuditEntityType {
   USER = 'user',
   ORGANIZATION = 'organization',
   BOARD = 'board',
   TASK = 'task',
   COMMENT = 'comment',
   ATTACHMENT = 'attachment',
+  NOTIFICATION = 'notification',
   AUTH = 'auth',
+  SYSTEM = 'system',
+}
+
+interface AuditLogCreationAttributes {
+  id?: string;
+  action: AuditAction;
+  entity: AuditEntityType;
+  entityId?: string;
+  description?: string;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  userId?: string;
 }
 
 @Table({
@@ -45,54 +65,55 @@ export enum AuditEntity {
     { fields: ['createdAt'] },
   ],
 })
-export class AuditLog extends Model {
+export class AuditLog extends Model<AuditLog, AuditLogCreationAttributes> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  declareid: string;
+  declare id: string;
 
   @AllowNull(false)
   @Column(DataType.ENUM(...Object.values(AuditAction)))
-  action: AuditAction;
+  declare action: AuditAction;
 
   @AllowNull(false)
-  @Column(DataType.ENUM(...Object.values(AuditEntity)))
-  entity: AuditEntity;
+  @Column(DataType.ENUM(...Object.values(AuditEntityType)))
+  declare entity: AuditEntityType;
 
   @AllowNull(true)
+  @Index
   @Column(DataType.UUID)
-  entityId: string;
+  declare entityId: string | null;
 
   @AllowNull(true)
   @Column(DataType.TEXT)
-  description: string;
+  declare description: string | null;
 
   @AllowNull(true)
   @Column(DataType.JSONB)
-  oldValues: Record<string, any>;
+  declare oldValues: Record<string, unknown> | null;
 
   @AllowNull(true)
   @Column(DataType.JSONB)
-  newValues: Record<string, any>;
+  declare newValues: Record<string, unknown> | null;
 
   @AllowNull(true)
   @Column(DataType.STRING(45))
-  ipAddress: string;
+  declare ipAddress: string | null;
 
   @AllowNull(true)
   @Column(DataType.TEXT)
-  userAgent: string;
+  declare userAgent: string | null;
 
   @ForeignKey(() => User)
   @AllowNull(true)
   @Index
   @Column(DataType.UUID)
-  userId: string;
+  declare userId: string | null;
 
   @CreatedAt
   declare createdAt: Date;
 
   // Associations
   @BelongsTo(() => User)
-  user: User;
+  declare user: User | null;
 }

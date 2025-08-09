@@ -13,6 +13,7 @@ import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { FilesModule } from './modules/files/files.module';
 import { appConfig, databaseConfig, jwtConfig } from './config';
 import { ResponseHelper } from './common/helpers/response.helper';
+import { CommentsModule } from './modules/comments/comments.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ResponseHelper } from './common/helpers/response.helper';
     NotificationsModule,
     AuditLogsModule,
     FilesModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService, ResponseHelper],

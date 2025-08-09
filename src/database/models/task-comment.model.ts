@@ -16,6 +16,14 @@ import {
 import { Task } from './task.model';
 import { User } from './user.model';
 
+interface TaskCommentCreationAttributes {
+  id?: string;
+  content: string;
+  metadata?: Record<string, unknown>;
+  taskId: string;
+  userId: string;
+}
+
 @Table({
   tableName: 'task_comments',
   paranoid: true,
@@ -26,7 +34,10 @@ import { User } from './user.model';
     { fields: ['createdAt'] },
   ],
 })
-export class TaskComment extends Model {
+export class TaskComment extends Model<
+  TaskComment,
+  TaskCommentCreationAttributes
+> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
