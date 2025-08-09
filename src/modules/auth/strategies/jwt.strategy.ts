@@ -14,6 +14,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new Error('JWT secret is not configured');
     }
 
+    console.log('🔧 JWT Strategy constructor called');
+    console.log('🔑 JWT Secret configured:', secretKey ? 'Yes' : 'No');
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: secretKey,
@@ -22,14 +25,43 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<any> {
+    console.log('🔍 JWT STRATEGY VALIDATE METHOD CALLED');
+    console.log('📋 Received payload:', {
+      sub: payload.sub,
+      email: payload.email,
+      role: payload.role,
+      iat: payload.iat,
+      exp: payload.exp,
+    });
+
     try {
+      console.log('🔎 Looking for user with ID:', payload.sub);
+
       const user = await User.findOne({
         where: { id: payload.sub },
       });
 
-      if (!user || !user.isActive) {
-        throw new UnauthorizedException('User not found or inactive');
+      console.log(
+        '👤 Database query result:',
+        user ? 'User found' : 'User not found',
+      );
+
+      if (!user) {
+        console.log('❌ User not found in database');
+        throw new UnauthorizedException('User not found');
       }
+
+      if (!user.isActive) {
+        console.log('❌ User account is inactive');
+        throw new UnauthorizedException('User account is inactive');
+      }
+
+      console.log('✅ User validation successful:', {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+      });
 
       const userData = {
         id: user.id,
@@ -44,9 +76,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         isActive: user.isActive,
       };
 
+      console.log('🎯 Returning user data to guard');
       return userData;
     } catch (error) {
-      console.log('error :>> ', error);
+      console.log('💥 JWT Strategy validation error:', error);
+      console.log('📚 Error stack:', error);
       throw new UnauthorizedException('Invalid token');
     }
   }

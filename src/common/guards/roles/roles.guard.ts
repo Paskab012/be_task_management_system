@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   CanActivate,
@@ -7,52 +5,55 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RoleType } from '@/common/enums';
-import { ROLE_PERMISSIONS } from '@/constants/role.permissions';
-import { ROLES_KEY } from '../../decorators/roles.decorators';
-import { PERMISSIONS_KEY } from '../../decorators/permissions.decorators';
+import { ResponseHelper } from '@/common/helpers/response.helper';
 import { AuthenticatedUser } from '@/modules/auth/interfaces';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly responseHelper: ResponseHelper,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<RoleType[]>(
-      ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const roles = this.reflector.get<string[]>('roles', context.getHandler());
 
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
-      PERMISSIONS_KEY,
-      [context.getHandler(), context.getClass()],
-    );
-
-    if (!requiredRoles && !requiredPermissions) {
+    if (!roles) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const user: AuthenticatedUser = request.user;
+    const request = context
+      .switchToHttp()
+      .getRequest<{ user?: AuthenticatedUser }>();
+    const user: AuthenticatedUser | undefined = request.user;
 
     if (!user) {
-      throw new ForbiddenException('User not authenticated');
-    }
-
-    if (requiredRoles && !requiredRoles.includes(user.role)) {
-      throw new ForbiddenException('Insufficient role permissions');
-    }
-
-    // Check permissions
-    if (requiredPermissions) {
-      const userPermissions = ROLE_PERMISSIONS.get(user.role) || [];
-      const hasRequiredPermission = requiredPermissions.some((permission) =>
-        userPermissions.includes(permission as any),
+      throw new ForbiddenException(
+        this.responseHelper.error({
+          message: 'User not authenticated',
+          errors: null,
+        }),
       );
+    }
 
-      if (!hasRequiredPermission) {
-        throw new ForbiddenException('Insufficient permissions');
-      }
+    if (!user.role) {
+      throw new ForbiddenException(
+        this.responseHelper.error({
+          message: 'User role not found',
+          errors: null,
+        }),
+      );
+    }
+
+    const hasRole: boolean = roles.includes(user.role);
+
+    if (!hasRole) {
+      throw new ForbiddenException(
+        this.responseHelper.error({
+          message: 'User does not have the required role permissions.',
+          errors: null,
+        }),
+      );
     }
 
     return true;

@@ -387,7 +387,7 @@ export class AuthService {
       console.log('📋 JWT Payload:', payload);
 
       const accessTokenExpiresIn =
-        this.configService.get<string>('jwt.accessTokenExpiration') || '15m';
+        this.configService.get<string>('jwt.accessTokenExpiration') || '1h';
       const refreshTokenExpiresIn =
         this.configService.get<string>('jwt.refreshTokenExpiration') || '7d';
 

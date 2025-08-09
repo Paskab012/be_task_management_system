@@ -1,3 +1,4 @@
-export { JwtAuthGuard } from '../guards/auth/jwt-auth.guard';
-export { LocalAuthGuard } from './local-auth.guard';
-export { RolesGuard } from '../guards/roles/roles.guard';
+export * from '../guards/auth/jwt-auth.guard';
+export * from './local-auth.guard';
+export * from '../guards/roles/roles.guard';
+export * from '../guards/permissions.guard';
