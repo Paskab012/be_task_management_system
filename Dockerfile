@@ -1,5 +1,5 @@
 # Builder stage
-FROM --platform=linux/amd64 node:20-alpine AS builder
+FROM node:20-alpine AS builder
 
 RUN apk add --no-cache make g++ python3
 
@@ -14,8 +14,26 @@ COPY . .
 RUN yarn build
 RUN npx tsc-alias -p tsconfig.json
 
-# Final production image
-FROM --platform=linux/amd64 node:18-alpine AS production
+# Development stage (NEW)
+FROM node:20-alpine AS development
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Start development server
+CMD ["yarn", "start:dev"]
+
+# Production stage
+FROM node:20-alpine AS production
 
 RUN apk add --no-cache \
     make \

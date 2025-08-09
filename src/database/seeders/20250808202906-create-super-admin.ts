@@ -20,13 +20,14 @@ export default {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       const superAdminId: string = uuidv4();
+      const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
       await queryInterface.bulkInsert('users', [
         {
           id: superAdminId,
           firstName: ADMIN_FIRST_NAME || 'Super',
           lastName: ADMIN_LAST_NAME || 'Admin',
           email: adminEmail,
-          password: await bcrypt.hash(`${ADMIN_PASSWORD}`, saltRounds),
+          password: hashedPassword,
           role: 'super_admin',
           phone: '+250788000000',
           jobTitle: 'System Administrator',
