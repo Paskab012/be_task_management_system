@@ -52,7 +52,7 @@ export class BoardsController {
   }
 
   @Get()
-  @Roles('super_admin', 'admin', 'user')
+  @Roles('super_admin', 'admin', 'user', 'guest')
   @ApiOperation({ summary: 'Get all boards with pagination and filters' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })

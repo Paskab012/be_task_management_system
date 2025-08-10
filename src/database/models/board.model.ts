@@ -99,7 +99,7 @@ export class Board extends Model<Board, BoardCreationAttributes> {
   createdById: string;
 
   @CreatedAt
-  declarecreatedAt: Date;
+  declare createdAt: Date;
 
   @UpdatedAt
   declare updatedAt: Date;

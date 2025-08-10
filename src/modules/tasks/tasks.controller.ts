@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
   Get,
@@ -10,6 +11,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,6 +22,14 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto, UpdateTaskDto } from './dtos';
 import { JwtAuthGuard, RolesGuard, PermissionsGuard } from '@/common/guards';
@@ -29,12 +39,47 @@ import { ApiResponse as ApiResponseType } from '@/common/helpers/response.helper
 import { AuthenticatedUser } from '@/modules/auth/interfaces';
 import { TaskStatus, TaskPriority } from '@/common/enums';
 
+// Custom interceptor for debugging
+@Injectable()
+export class TasksControllerInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const handler = context.getHandler().name;
+
+    console.log('🎯 ===== TASKS CONTROLLER INTERCEPTOR =====');
+    console.log('🔧 Handler method:', handler);
+    console.log('🛤️ Request URL:', request);
+    console.log('⏰ Timestamp:', new Date().toISOString());
+    console.log('==========================================');
+
+    return next.handle().pipe(
+      tap({
+        next: (data) => {
+          console.log('✅ Controller method completed successfully');
+          console.log(
+            '📤 Response data preview:',
+            data ? 'Data returned' : 'No data',
+          );
+        },
+        error: (error) => {
+          console.log('💥 Controller method failed with error:');
+          console.log('Error type:', typeof error);
+          console.log('Error stack:', error);
+        },
+      }),
+    );
+  }
+}
+
 @ApiTags('Tasks')
 @Controller('tasks')
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+@UseInterceptors(TasksControllerInterceptor)
 @ApiBearerAuth()
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(private readonly tasksService: TasksService) {
+    console.log('🏗️ TasksController constructor called');
+  }
 
   @Post()
   @Roles('super_admin', 'admin')
@@ -48,33 +93,25 @@ export class TasksController {
     @Body() createTaskDto: CreateTaskDto,
     @CurrentUser() currentUser?: AuthenticatedUser,
   ): Promise<ApiResponseType<Task>> {
-    console.log('🎯 CREATE TASK CONTROLLER REACHED');
-    if (!currentUser) {
-      throw new Error('Authenticated user is required');
+    try {
+      if (!currentUser) {
+        throw new Error('Authenticated user is required');
+      }
+
+      const result = await this.tasksService.createTask(
+        createTaskDto,
+        currentUser,
+      );
+      return result;
+    } catch (error) {
+      console.log('error :>> ', error);
+      throw error;
     }
-    return this.tasksService.createTask(createTaskDto, currentUser);
   }
 
   @Get()
   @Roles('super_admin', 'admin', 'user')
   @ApiOperation({ summary: 'Get all tasks with pagination and filters' })
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, example: 'authentication' })
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    enum: TaskStatus,
-    example: TaskStatus.TODO,
-  })
-  @ApiQuery({
-    name: 'priority',
-    required: false,
-    enum: TaskPriority,
-    example: TaskPriority.HIGH,
-  })
-  @ApiQuery({ name: 'boardId', required: false, example: 'board-uuid' })
-  @ApiQuery({ name: 'assignedUserId', required: false, example: 'user-uuid' })
   async getAllTasks(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
@@ -85,6 +122,8 @@ export class TasksController {
     @Query('assignedUserId') assignedUserId?: string,
     @CurrentUser() currentUser?: AuthenticatedUser,
   ): Promise<ApiResponseType<Task[]>> {
+    console.log('🔍 GET ALL TASKS CONTROLLER REACHED');
+
     return this.tasksService.getAllTasks(
       parseInt(page),
       parseInt(limit),

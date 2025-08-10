@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsNotEmpty,
@@ -12,9 +13,11 @@ import {
   IsUUID,
   Min,
   Max,
+  ValidateIf,
+  IsNumber,
 } from 'class-validator';
 import { TaskStatus, TaskPriority } from '@/common/enums';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class CreateTaskDto {
   @ApiProperty({
@@ -22,9 +25,9 @@ export class CreateTaskDto {
     description: 'Task title',
     maxLength: 200,
   })
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(200)
+  @IsNotEmpty({ message: 'Title is required' })
+  @IsString({ message: 'Title must be a string' })
+  @MaxLength(200, { message: 'Title cannot exceed 200 characters' })
   title: string;
 
   @ApiProperty({
@@ -32,7 +35,7 @@ export class CreateTaskDto {
     required: false,
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Description must be a string' })
   description?: string;
 
   @ApiProperty({
@@ -43,7 +46,7 @@ export class CreateTaskDto {
     default: TaskStatus.TODO,
   })
   @IsOptional()
-  @IsEnum(TaskStatus)
+  @IsEnum(TaskStatus, { message: 'Invalid task status' })
   status?: TaskStatus;
 
   @ApiProperty({
@@ -54,7 +57,7 @@ export class CreateTaskDto {
     default: TaskPriority.MEDIUM,
   })
   @IsOptional()
-  @IsEnum(TaskPriority)
+  @IsEnum(TaskPriority, { message: 'Invalid task priority' })
   priority?: TaskPriority;
 
   @ApiProperty({
@@ -63,7 +66,7 @@ export class CreateTaskDto {
     description: 'Task due date in ISO format',
   })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: 'Due date must be a valid ISO date string' })
   dueDate?: string;
 
   @ApiProperty({
@@ -72,21 +75,24 @@ export class CreateTaskDto {
     description: 'Task start date in ISO format',
   })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: 'Start date must be a valid ISO date string' })
   startDate?: string;
 
   @ApiProperty({
-    example: 8,
+    example: 8.5,
     required: false,
     description: 'Estimated hours to complete the task',
     minimum: 0,
     maximum: 1000,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    return value ? Number(value) : undefined;
+  })
   @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  @Max(1000)
+  @IsNumber({}, { message: 'Estimated hours must be a valid number' })
+  @Min(0, { message: 'Estimated hours cannot be negative' })
+  @Max(1000, { message: 'Estimated hours cannot exceed 1000' })
   estimatedHours?: number;
 
   @ApiProperty({
@@ -96,9 +102,12 @@ export class CreateTaskDto {
     minimum: 0,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    return value ? Number(value) : undefined;
+  })
   @Type(() => Number)
-  @IsInt()
-  @Min(0)
+  @IsInt({ message: 'Position must be an integer' })
+  @Min(0, { message: 'Position cannot be negative' })
   position?: number;
 
   @ApiProperty({
@@ -108,8 +117,13 @@ export class CreateTaskDto {
     type: [String],
   })
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
+  @IsArray({ message: 'Tags must be an array' })
+  @IsString({ each: true, message: 'Each tag must be a string' })
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return [value];
+    return [];
+  })
   tags?: string[];
 
   @ApiProperty({
@@ -119,15 +133,18 @@ export class CreateTaskDto {
     type: Object,
   })
   @IsOptional()
-  @IsObject()
+  @IsObject({ message: 'Metadata must be an object' })
+  @Transform(({ value }) => {
+    return value || {};
+  })
   metadata?: Record<string, unknown>;
 
   @ApiProperty({
     example: 'board-uuid',
     description: 'Board ID where the task belongs',
   })
-  @IsNotEmpty()
-  @IsUUID()
+  @IsNotEmpty({ message: 'Board ID is required' })
+  @IsUUID('4', { message: 'Board ID must be a valid UUID' })
   boardId: string;
 
   @ApiProperty({
@@ -136,7 +153,14 @@ export class CreateTaskDto {
     description: 'User ID to assign the task to',
   })
   @IsOptional()
-  @IsUUID()
+  @ValidateIf(
+    (obj, value) => value !== undefined && value !== null && value !== '',
+  )
+  @IsUUID('4', { message: 'Assigned User ID must be a valid UUID' })
+  @Transform(({ value }) => {
+    if (value === 'unassigned' || value === '') return undefined;
+    return value;
+  })
   assignedUserId?: string;
 
   @ApiProperty({
@@ -145,6 +169,9 @@ export class CreateTaskDto {
     description: 'Parent task ID for subtasks',
   })
   @IsOptional()
-  @IsUUID()
+  @ValidateIf(
+    (obj, value) => value !== undefined && value !== null && value !== '',
+  )
+  @IsUUID('4', { message: 'Parent Task ID must be a valid UUID' })
   parentTaskId?: string;
 }

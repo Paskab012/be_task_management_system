@@ -24,10 +24,6 @@ export class BoardsService {
     createBoardDto: CreateBoardDto,
     currentUser: AuthenticatedUser,
   ): Promise<ApiResponse<Board>> {
-    console.log('🚀 CREATE BOARD SERVICE REACHED');
-    console.log('📝 DTO received:', createBoardDto);
-    console.log('👤 Current user:', currentUser.email);
-
     try {
       const whereCondition: WhereOptions<Board> = {
         name: createBoardDto.name,

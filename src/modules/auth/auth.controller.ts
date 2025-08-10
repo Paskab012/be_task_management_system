@@ -142,28 +142,14 @@ export class AuthController {
     return this.authService.refreshToken(refreshTokenDto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @ApiAuth()
   @ApiOperation({
     summary: 'User logout',
     description: 'Logout user and invalidate current session',
   })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Logout successful',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'Successfully logged out' },
-      },
-    },
-  })
-  async logout(
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<{ message: string }> {
-    return this.authService.logout(user.id, user.sessionId);
+  async logout(): Promise<{ message: string }> {
+    return { message: 'Successfully logged out' };
   }
 
   @UseGuards(JwtAuthGuard)

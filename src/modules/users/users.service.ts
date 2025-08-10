@@ -278,7 +278,7 @@ export class UsersService {
         throw new NotFoundException('User not found');
       }
 
-      await user.update({ deletedAt: new Date() });
+      await user.destroy({ force: true });
 
       return this.responseHelper.success<void>({
         message: 'User deleted successfully',

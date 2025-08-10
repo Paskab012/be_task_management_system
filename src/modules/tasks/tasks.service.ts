@@ -509,7 +509,7 @@ export class TasksService {
         }
       }
 
-      await task.update({ deletedAt: new Date() });
+      await task.destroy({ force: true });
 
       return this.responseHelper.success<void>({
         message: 'Task deleted successfully',
